@@ -29,10 +29,27 @@
 	    <input type="submit" name="Send" value="Send" @click.stop.prevent="submitForm">
 	</form>
 	<div v-if="formSubmittedWithoutError" class="successMsg">
-		Your request has been successfully submitted. Thanks.
+		<!--[if lte IE 9]>
+		  <style>
+		    .path {stroke-dasharray: 0 !important;}
+		  </style>
+		<![endif]-->
+		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
+  			<circle class="path circle" fill="none" stroke="#73AF55" stroke-width="6" stroke-miterlimit="10" cx="65.1" cy="65.1" r="62.1"/>
+  			<polyline class="path check" fill="none" stroke="#73AF55" stroke-width="6" stroke-linecap="round" stroke-miterlimit="10" points="100.2,40.2 51.5,88.8 29.8,67.5 "/>
+		</svg><span class="success">Your information has been submitted. Thank You.</span>
 	</div>
-	<div v-if="formSubmittedWithError" class="failureMsg">
-		There was an error. Please try again.
+	<div v-else-if="formSubmittedWithError" class="failureMsg">
+		<!--[if lte IE 9]>
+		  <style>
+		    .path {stroke-dasharray: 0 !important;}
+		  </style>
+		<![endif]-->
+		<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130.2 130.2">
+		  <circle class="path circle" fill="none" stroke="#D06079" stroke-width="6" stroke-miterlimit="10" cx="65.1" cy="65.1" r="62.1"/>
+		  <line class="path line" fill="none" stroke="#D06079" stroke-width="6" stroke-linecap="round" stroke-miterlimit="10" x1="34.4" y1="37.9" x2="95.8" y2="92.3"/>
+		  <line class="path line" fill="none" stroke="#D06079" stroke-width="6" stroke-linecap="round" stroke-miterlimit="10" x1="95.8" y1="38" x2="34.4" y2="92.2"/>
+		</svg><span class="error">There was an error. Please try again.</span>
 	</div>
 	<div v-else >
 		
@@ -97,10 +114,9 @@ export default {
   		setTimeout(function(){
   			this.formSubmitted = false,
   			this.formSubmissionError = false;
-  			console.log("Vitore" + this.formSubmitted);
+  			// console.log("Vitore" + this.formSubmitted);
   		}, 4000);
-
-  		console.log("bahire" + this.formSubmitted);
+  		// console.log("bahire" + this.formSubmitted);
   	},
   	showErrorMsg: function(){
   		this.formSubmitted = false;
@@ -109,27 +125,26 @@ export default {
   			this.formSubmitted = false,
   			this.formSubmissionError = false;
   		}, 4000);	
-
   	},
   	submitForm: function(){  	
   		var qs = require('qs');
   		var self=this;
-  		this.$http.post('https://form.edealer.ca/forms-v3/ThankYouExternal.html?WID=844',qs.stringify({
+  		if(self.selectedCompanyDetails !== null && self.customer.name !== "" && self.customer.email !== "" && self.customer.phone !== ""){
+  			this.$http.post('https://form.edealer.ca/forms-v3/ThankYouExternal.html?WID=844',qs.stringify({
   			first_name:this.customer.name,
   			last_name:this.customer.name,
   			email:this.customer.email,
   			phone:this.customer.phone,
-  			comments:this.customer.comments,
+  			comments:this.customer.comments + '. Company Details:' + this.selectedCompanyDetails.CompanyName + ',' + this.selectedCompanyDetails.Address + ',' + this.selectedCompanyDetails.City + ',' + this.selectedCompanyDetails.Prov + ',' + this.selectedCompanyDetails.PostalCode,
   			form_name: this.customer.form_name
-
-  		}), {
-  			headers : {
-        		'Content-Type' : 'application/x-www-form-urlencoded; charset=UTF-8'
-    		}
-		})
+	  		}),{
+	  			headers : {
+	        		'Content-Type' : 'application/x-www-form-urlencoded; charset=UTF-8'
+	    		}
+			})
   		.then(function(response){
   			if(response.data.status.trim().toLowerCase().indexOf('success') > -1){
-  				console.log("Yahoo");
+  				// console.log("Yahoo");
   				self.customer.name="";
   				self.customer.email="";
   				self.customer.phone="";
@@ -138,14 +153,14 @@ export default {
   				self.showSuccsessMsg();
   			}else{
   				console.log("There was an error");
-  				this.showErrorMsg();
+  				self.showErrorMsg();
   			}
-  		}, function(response){
-  			
-  			console.log("There was an error");
-  			console.log(response);
-  			this.showErrorMsg();
-  		});
+  		}, function(response){  			
+	  			console.log("There was an error");
+	  			console.log(response);
+	  			self.showErrorMsg();
+  			});
+  		}  		
   	}
   },
   computed:{
@@ -297,4 +312,84 @@ div.search-box .searchHover{
 	border:1px solid red;
 	transition: all linear 400ms;
 }
+
+/*--------------------------------------*/
+
+svg {
+  width: 30px;
+    display: inline-block;
+    margin: 0 auto;
+    padding-right: 15px;
+    vertical-align: middle;
+}
+.path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 0;
+}
+.path.circle {
+  -webkit-animation: dash .9s ease-in-out;
+  animation: dash .9s ease-in-out;
+}
+.path.line {
+  stroke-dashoffset: 1000;
+  -webkit-animation: dash .9s .35s ease-in-out forwards;
+  animation: dash .9s .35s ease-in-out forwards;
+}
+.path.check {
+  stroke-dashoffset: -100;
+  -webkit-animation: dash-check .9s .35s ease-in-out forwards;
+  animation: dash-check .9s .35s ease-in-out forwards;
+}
+p {
+  text-align: center;
+  margin: 20px 0 60px;
+  font-size: 1.25em;
+}
+span.success {
+  color: #73AF55;
+  display: inline-block;
+      font-size: 16px;
+    vertical-align: sub;
+}
+span.error {
+  color: #D06079;
+  display: inline-block;
+      font-size: 16px;
+    vertical-align: sub;
+}
+@-webkit-keyframes dash {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes dash {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@-webkit-keyframes dash-check {
+  0% {
+    stroke-dashoffset: -100;
+  }
+  100% {
+    stroke-dashoffset: 900;
+  }
+}
+@keyframes dash-check {
+  0% {
+    stroke-dashoffset: -100;
+  }
+  100% {
+    stroke-dashoffset: 900;
+  }
+}
+
+
+
 </style>
