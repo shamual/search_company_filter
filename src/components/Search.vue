@@ -2,12 +2,13 @@
   <div class="Search search-box">
   	<form action="" name="preferred-pricing-form" id="preferred-pricing-form" method="post" accept-charset="utf-8" enctype="multipart/form-data">
 	    <h1>{{ msg }}</h1>
-	    <input autocomplete="false" id="searchInputBox" type="text" name="search" placeholder="Start typing the name of the company..." v-model.trim="searchKey" @keydown.down="searchDown" @keydown.up="searchUp" @keydown.enter.stop.prevent="searchSelected">
-		<ul>
+	    <input autocomplete="false" id="searchInputBox" type="text" name="search" placeholder="Start typing the name of your company…" v-model.trim="searchKey" @keydown.down="searchDown" @keydown.up="searchUp" @keydown.enter.stop.prevent="searchSelected">
+		<ul v-if="showCompanies()">
 	   		<li v-if="checkIfAnyResult()">No Match Found</li>
 	   		<li  :tabindex="index" :id="'searchHover'+index" v-for="(company,index) in filteredSearch" @click.stop.prevent="selectedCompany(company)" :class="{searchHover:(index == searchCounter)}" v-else >{{company.CompanyName}}</li>
 	   	</ul>
 	   	<div v-if="selectedCompanyDetails" class="selectedCompany">
+        <p class="congratulations-msg">Congratulations! Your company qualifies so you are are eligible for Preferred Pricing!</p>
 	   		<span><span class="detailsLabel">Name: </span>{{selectedCompanyDetails.CompanyName}}</span>	
 		   	<span><span class="detailsLabel">Address: </span>{{selectedCompanyDetails.Address}}</span>	
 		   	<span><span class="detailsLabel">City: </span>{{selectedCompanyDetails.City}}</span>	
@@ -15,18 +16,34 @@
 		   	<span><span class="detailsLabel">Postal Code: </span>{{selectedCompanyDetails.PostalCode}}</span>	
 	   	</div>
 	   	<div class="mandatory-parts">
-	   		<label for="first_name">Name</label>
-		    <input type="text" name="first_name" placeholder="Name" v-model="customer.name" required>
-		    <label for="last_name">Last Name</label>
-		    <input type="hidden" name="last_name" placeholder="Last Name" v-model="customer.name" required>
-		    <label for="email">Email</label>
-		    <input type="email" name="email" placeholder="Email" v-model="customer.email" required>
-		    <label for="phone">Phone</label>
-		    <input type="tel" name="phone" placeholder="Phone" v-model="customer.phone" required>
-		    <label for="comments">Comments</label>	    
-		    <textarea name="comments" placeholder="Comments" v-model="customer.comments"></textarea>
+        <div class="field-wrapper">
+  	   		<label for="first_name">Name</label>
+  		    <input type="text" name="first_name" v-validate="'required'" data-vv-as="Name" placeholder="Name *" v-model="customer.name" required>
+          <span v-show="errors.has('first_name')" class="help is-danger"><i class="icon-info-2" aria-hidden="true"></i>
+  {{ errors.first('first_name') }}</span>
+        </div>
+        <div class="field-wrapper">
+  		    <label for="last_name">Last Name</label>
+  		    <input type="hidden" name="last_name" placeholder="Last Name *" v-model="customer.name" required>
+        </div>
+        <div class="field-wrapper">
+  		    <label for="email">Email</label>
+  		    <input type="email" name="email" v-validate="'required|email'" data-vv-as="Email" placeholder="Email *" v-model="customer.email" required>
+          <span v-show="errors.has('email')" class="help is-danger"><i class="icon-info-2" aria-hidden="true"></i>
+  {{ errors.first('email') }}</span>
+        </div>
+        <div class="field-wrapper">
+  		    <label for="phone">Phone</label>
+  		    <input type="tel" name="phone" v-validate="{ required: true, regex: /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/ }" data-vv-as="Phone" placeholder="Phone *" v-model="customer.phone" required>
+          <span v-show="errors.has('phone')" class="help is-danger"><i class="icon-info-2" aria-hidden="true"></i>
+  {{ errors.first('phone') }}</span>
+        </div>
+        <div class="field-wrapper">
+  		    <label for="comments">Comments</label>	    
+  		    <textarea name="comments" placeholder="Comments" v-model="customer.comments"></textarea>
+        </div>
 	    </div>	
-	    <input type="submit" name="Send" value="Send" @click.stop.prevent="submitForm">
+	    <input type="submit" name="Send" value="Get Offer" @click.stop.prevent="submitForm">
 	</form>
 	<div v-if="formSubmittedWithoutError" class="successMsg">
 		<!--[if lte IE 9]>
@@ -59,10 +76,11 @@
 
 <script>
 import companies from "../companies"
+
 export default { 
     data () {
     return {
-      msg: 'Search',
+      msg: 'Search Company Name',
       customer: {
 	      name:"",
 	      email: "",
@@ -201,6 +219,7 @@ export default {
 <style scoped>
 h1{
 	color:#034c9c;
+  font-size: 24px;
 }
 div.search-box{
 	position: relative;
@@ -210,12 +229,15 @@ div.search-box{
 	box-sizing: border-box;
 	text-align: center;
 	margin:0 auto;
+  font-family: 'Yantramanav', sans-serif;
 }
 div.search-box input{
 	width: 100%;	
 	padding:10px 20px;
 	margin:0;
-	box-sizing: border-box;
+  font-size: 16px;
+	box-sizing: border-box;  
+
 }
 div.search-box label{
 	text-align: left;
@@ -246,12 +268,14 @@ ul{
 	-webkit-box-shadow: 2px 2px 8px -2px rgba(0,0,0,0.75);
 	-moz-box-shadow: 2px 2px 8px -2px rgba(0,0,0,0.75);
 	box-shadow: 2px 2px 8px -2px rgba(0,0,0,0.75);
+  z-index: 99;
 
 }
 li{
 	font-size: 14px;
 	padding: 20px 10px;
 	cursor: pointer;
+  list-style: none;
 }
 li:nth-child(even){
 	background-color: #fff;		
@@ -263,7 +287,7 @@ li:focus{
 .selectedCompany{
 	display: block;
 	padding: 10px;
-	margin:20px 0;
+	margin:10px 0 20px;
 }
 .selectedCompany span{
 	display: block;
@@ -284,18 +308,33 @@ li:focus{
 	box-sizing: border-box;
 }
 .search-box .mandatory-parts textarea{ 
-	height: 150px;
+	height: 75px;
+  font-size: 16px;
 }
 .search-box input[type="submit"]{
-	background-color: #034c9c;
+	/*background-color: #034c9c;*/
+  background-color: #47a23b;
 	border:none;	
 	color:#fff;
 	outline: 0;
+  -webkit-appearance: none;
+   font-size:16px;
+   max-width: 200px;
+   float: right;
+   clear: both;
+
+
 }
 div.search-box .searchHover{
 	background-color: #034c9c;
 	color:#fff;
 	transition: all linear 100ms;
+}
+div.search-box  .congratulations-msg{
+  text-align: left;
+    font-size: 16px;
+    margin: 0px 0 15px;
+    color: #034ca9;
 }
 .successMsg{
 	display: block;
@@ -312,7 +351,19 @@ div.search-box .searchHover{
 	border:1px solid red;
 	transition: all linear 400ms;
 }
-
+div.field-wrapper{
+  position: relative;
+}
+span.help.is-danger {
+    color: #ca2b2b;
+    font-size: 14px;
+  /*  float: right;
+    clear: both;
+    padding-bottom: 15px;*/
+    position: absolute;
+    top: 25%;
+    right: 10px;
+}
 /*--------------------------------------*/
 
 svg {
